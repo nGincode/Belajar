@@ -1,10 +1,10 @@
 const winston = require("winston");
 const expressWinston = require("express-winston");
 const moment = require("moment");
+const winstonLog = require("../config/loki");
 
 const {
   getRoutesMonitoring,
-  rsTime,
   monitor_count_request,
   monitor_response_time,
 } = require("../config/prometheus");
@@ -35,7 +35,11 @@ const request = () => {
   return expressWinston.logger({
     meta: true,
     skip: function (req, res) {
-      if (res.url?.split("/")?.[1] == "_next") return true;
+      if (req.url?.split("/")?.[1] == "api") {
+        return false;
+      } else {
+        return true;
+      }
     },
     transports: [
       new winston.transports.DailyRotateFile(DailyRotateFileConf),
@@ -68,7 +72,11 @@ const response = () => {
   return expressWinston.logger({
     meta: true,
     skip: function (req, res) {
-      if (res.url?.split("/")?.[1] == "_next") return true;
+      if (req.url?.split("/")?.[1] == "api") {
+        return false;
+      } else {
+        return true;
+      }
     },
     transports: [
       new winston.transports.DailyRotateFile({
@@ -119,6 +127,17 @@ const response = () => {
             status: info.meta.res.statusCode,
           })
           .set(info.meta.responseTime);
+
+        var message = JSON.stringify(info.meta.res.body);
+        winstonLog.log.info({
+          responseTime: info.meta.responseTime,
+          message: message,
+          labels: {
+            path: routes_name,
+            status_code: info.meta.res.statusCode,
+            method: info.meta.req.method,
+          },
+        });
 
         return arr.join(" | ");
       })

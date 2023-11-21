@@ -15,7 +15,7 @@ const monitor_response_time = new client.Gauge({
 const register = new client.Registry();
 
 const createMetric = async () => {
-  register.setDefaultLabels({ app: "api_lrt_jabo_topup" });
+  register.setDefaultLabels({ app: "api_app_1" });
   client.collectDefaultMetrics({ register });
   register.registerMetric(monitor_count_request);
   register.registerMetric(monitor_response_time);
